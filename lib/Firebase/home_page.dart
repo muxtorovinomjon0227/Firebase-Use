@@ -1,100 +1,61 @@
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
-import 'package:path/path.dart';
+import 'dart:async';
+import 'dart:io';
 
-class ImageUploads extends StatefulWidget {
-  ImageUploads({Key? key}) : super(key: key);
+
+class FirebaseUploedImage extends StatefulWidget {
+  const FirebaseUploedImage({Key? key}) : super(key: key);
 
   @override
-  _ImageUploadsState createState() => _ImageUploadsState();
+  State<FirebaseUploedImage> createState() => _FirebaseUploedImageState();
 }
 
-class _ImageUploadsState extends State<ImageUploads> {
-  firebase_storage.FirebaseStorage storage =
-      firebase_storage.FirebaseStorage.instance;
+class _FirebaseUploedImageState extends State<FirebaseUploedImage> {
 
-  File? _photo;
-  final ImagePicker _picker = ImagePicker();
+  File? imageUrl;
 
-  Future imgFromGallery() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-
-    setState(() {
-      if (pickedFile != null) {
-        _photo = File(pickedFile.path);
-        uploadFile();
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
-
-  Future imgFromCamera() async {
-    final pickedFile = await _picker.pickImage(source: ImageSource.camera);
-
-    setState(() {
-      if (pickedFile != null) {
-        _photo = File(pickedFile.path);
-        uploadFile();
-      } else {
-        print('No image selected.');
-      }
-    });
-  }
-
-  Future uploadFile() async {
-    if (_photo == null) return;
-    final fileName = basename(_photo!.path);
-    final destination = 'files/$fileName';
-
-    try {
-      final ref = firebase_storage.FirebaseStorage.instance
-          .ref(destination)
-          .child('file/');
-      await ref.putFile(_photo!);
-    } catch (e) {
-      print('error occured');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(),
-      body: Text("sasas")
+    return  Scaffold(
+      body: Column(
+        children: [
+          const SizedBox(height: 50),
+          imageUrl!=null
+         ?  Image(
+            image: FileImage(
+                File(imageUrl!.path.toString()),
+                scale: 4
+            ),
+          )
+         :  Padding(
+           padding: const EdgeInsets.all(8.0),
+           child: Image.network("https://i.imgur.com/sUFH1Aq.png"),
+         ),
+          const SizedBox(height: 30),
+          ElevatedButton(onPressed: (){
+            _imagePikce();
+          }, child: const Text("Rasm yuklash"))
+        ],
+      )
     );
   }
 
-  void _showPicker(context) {
-    showModalBottomSheet(
-        context: context,
-        builder: (BuildContext bc) {
-          return SafeArea(
-            child: Container(
-              child:  Wrap(
-                children: <Widget>[
-                  new ListTile(
-                      leading: new Icon(Icons.photo_library),
-                      title: new Text('Gallery'),
-                      onTap: () {
-                        imgFromGallery();
-                        Navigator.of(context).pop();
-                      }),
-                  new ListTile(
-                    leading: new Icon(Icons.photo_camera),
-                    title: new Text('Camera'),
-                    onTap: () {
-                      imgFromCamera();
-                      Navigator.of(context).pop();
-                    },
-                  ),
-                ],
-              ),
-            ),
-          );
-        });
+
+  Future _imagePikce() async {
+    final image = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if(image == null) return;
+    final imageTemp = File(image.path);
+    setState(() {
+    imageUrl = imageTemp;
+    });
+    print(imageTemp);
+
   }
+
+
+
+
 }
